@@ -31,15 +31,11 @@ func part1(directories []string, files map[string]int) int {
 }
 func part2(directories []string, files map[string]int) int {
 	fileSystemSize := 70000000
-	requiredSpace := 30000000
+	requiredUnusedSpace := 30000000
 	spaceTaken := getDirectorySize("/", files)
 	unusedSpace := fileSystemSize - spaceTaken
 	directoriesSize := getDirectoriesSize(directories, files)
-	toDelete := requiredSpace - unusedSpace
-
-	fmt.Printf("Total space taken: %d\n", spaceTaken)
-	fmt.Printf("Unused space: %d\n", unusedSpace)
-	fmt.Printf("Need to delete: %d\n", toDelete)
+	toDelete := requiredUnusedSpace - unusedSpace
 
 	result := spaceTaken
 	for _, s := range directoriesSize {
