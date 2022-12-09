@@ -76,9 +76,9 @@ R 2
 
 This series of motions moves the head right four steps, then up four steps, then left three steps, then down one step, and so on. After each step, you'll need to update the position of the tail if the step means the head is no longer adjacent to the tail. Visually, these motions occur as follows (s marks the starting position as a reference point):
 
-### Initial State
-
 ```
+== Initial State ==
+
 ......
 ......
 ......
@@ -270,9 +270,9 @@ Rather than two knots, you now must simulate a rope consisting of ten knots. One
 
 Using the same series of motions as the above example, but with the knots marked H, 1, 2, ..., 9, the motions now occur as follows:
 
-### Initial State
-
 ```
+== Initial State ==
+
 ......
 ......
 ......
@@ -457,9 +457,9 @@ U 20
 
 These motions occur as follows (individual steps are not shown):
 
-### Initial State
-
 ```
+== Initial State ==
+
 ..........................
 ..........................
 ..........................
