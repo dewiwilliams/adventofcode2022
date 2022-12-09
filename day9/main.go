@@ -27,42 +27,61 @@ func main() {
 	data := getData("./input.txt")
 
 	fmt.Printf("Part1: %d\n", part1(data))
+	fmt.Printf("Part2: %d\n", part2(data))
 }
-func part1(data []int) int {
-	headPosition := position{}
-	tailPosition := position{}
-
+func part2(data []int) int {
 	coverage := make(map[string]int)
 
+	p := []position{}
+	for i := 0; i < 10; i++ {
+		p = append(p, position{})
+	}
+
 	for i := 0; i < len(data)/2; i++ {
-		headPosition, tailPosition = processLine(headPosition, tailPosition, data[i*2+0], data[i*2+1], coverage)
+		p = processLine(p, data[i*2+0], data[i*2+1], coverage)
 	}
 
 	return len(coverage)
 }
-func processLine(startingHeadPosition, startingTailPosition position, direction, amount int, coverage map[string]int) (position, position) {
-	headPosition := startingHeadPosition
-	tailPosition := startingTailPosition
+func part1(data []int) int {
+	coverage := make(map[string]int)
 
-	for i := 0; i < amount; i++ {
-		if direction == up {
-			headPosition.y--
-		} else if direction == down {
-			headPosition.y++
-		} else if direction == left {
-			headPosition.x--
-		} else if direction == right {
-			headPosition.x++
-		}
+	p := []position{}
+	p = append(p, position{}, position{})
 
-		headPosition, tailPosition = processTail(headPosition, tailPosition)
-
-		coverage[makeKey(tailPosition)] = 1
+	for i := 0; i < len(data)/2; i++ {
+		p = processLine(p, data[i*2+0], data[i*2+1], coverage)
 	}
 
-	return headPosition, tailPosition
+	return len(coverage)
 }
-func processTail(h, t position) (position, position) {
+func processLine(nodes []position, direction, amount int, coverage map[string]int) []position {
+	for i := 0; i < amount; i++ {
+		nodes[0] = processMovement(nodes[0], direction)
+
+		for j := 1; j < len(nodes); j++ {
+			nodes[j] = processTail(nodes[j-1], nodes[j])
+		}
+
+		coverage[makeKey(nodes[len(nodes)-1])] = 1
+	}
+
+	return nodes
+}
+func processMovement(p position, direction int) position {
+	if direction == up {
+		p.y--
+	} else if direction == down {
+		p.y++
+	} else if direction == left {
+		p.x--
+	} else if direction == right {
+		p.x++
+	}
+
+	return p
+}
+func processTail(h, t position) position {
 	xdiff := h.x - t.x
 	ydiff := h.y - t.y
 
@@ -71,7 +90,7 @@ func processTail(h, t position) (position, position) {
 		t.y += toUnit(ydiff)
 	}
 
-	return h, t
+	return t
 }
 func toUnit(v int) int {
 	if v > 0 {
