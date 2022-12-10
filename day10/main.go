@@ -15,10 +15,48 @@ const addx = 2
 func main() {
 	data := getData("./input.txt")
 
-	fmt.Printf("Part1: %d\n", part1(data))
-}
-func part1(data []int) int {
+	xValues := buildXValues(data)
 
+	fmt.Printf("Part1: %d\n", part1(xValues))
+
+	fmt.Printf("Part2:\n%v\n", part2(xValues))
+}
+func part1(xValues []int) int {
+	result := 0
+	for i := 20; i < len(xValues); i += 40 {
+		result += i * xValues[i]
+	}
+
+	return result
+}
+func part2(xValues []int) string {
+	width := 40
+	height := 6
+
+	result := ""
+
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			cycle := x + y*width
+
+			if abs((cycle%width)-xValues[cycle+1]) < 2 {
+				result += "#"
+			} else {
+				result += "."
+			}
+		}
+		result += "\n"
+	}
+
+	return result
+}
+func abs(v int) int {
+	if v < 0 {
+		return -v
+	}
+	return v
+}
+func buildXValues(data []int) []int {
 	xValues := []int{}
 
 	currentXValue := 1
@@ -34,12 +72,7 @@ func part1(data []int) int {
 		}
 	}
 
-	result := 0
-	for i := 20; i < len(xValues); i += 40 {
-		result += i * xValues[i]
-	}
-
-	return result
+	return xValues
 }
 func getData(filename string) []int {
 
