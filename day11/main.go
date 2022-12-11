@@ -20,16 +20,14 @@ func (m monkey) String() string {
 }
 
 func main() {
-	data := getTestData()
-
-	fmt.Printf("Part1: %v\n", part1(data))
-	fmt.Printf("Part2: %v\n", part2(data))
+	fmt.Printf("Part1: %v\n", part1(getData()))
+	fmt.Printf("Part2: %v\n", part2(getData()))
 }
 func part1(data []monkey) int {
 	return getScore(iterate(data, 20, true))
 }
 func part2(data []monkey) int {
-	return getScore(iterate(data, 10000, false))
+	return getScore(iteratePart2(data, 10000))
 }
 func getScore(m []monkey) int {
 	items := []int{}
@@ -39,17 +37,56 @@ func getScore(m []monkey) int {
 	sort.Sort(sort.IntSlice(items))
 	return items[len(items)-1] * items[len(items)-2]
 }
+func iteratePart2(m_in []monkey, rounds int) []monkey {
+
+	m := m_in
+
+	for i := 0; i < rounds; i++ {
+		m = iterateSingleRoundPart2(m)
+	}
+
+	return m
+}
 func iterate(m_in []monkey, rounds int, divideBy3 bool) []monkey {
 
 	m := m_in
 
 	for i := 0; i < rounds; i++ {
-		m = iterateSingleRound(m, divideBy3)
+		m = iterateSingleRoundPart1(m, divideBy3)
 	}
 
 	return m
 }
-func iterateSingleRound(m_in []monkey, divideBy3 bool) []monkey {
+func iterateSingleRoundPart2(m_in []monkey) []monkey {
+
+	m := m_in
+
+	modProduct := 1
+	for i := 0; i < len(m); i++ {
+		modProduct *= m[i].modulus
+	}
+
+	for i := 0; i < len(m); i++ {
+		for j := 0; j < len(m[i].items); j++ {
+			newValue := m[i].operation(m[i].items[j])
+			newValue %= modProduct
+
+			if newValue%m[i].modulus == 0 {
+				target := m[i].targets[0]
+				m[target].items = append(m[target].items, newValue)
+			} else {
+				target := m[i].targets[1]
+				m[target].items = append(m[target].items, newValue)
+			}
+		}
+
+		m[i].inspections += len(m[i].items)
+		m[i].items = []int{}
+	}
+
+	return m
+}
+func iterateSingleRoundPart1(m_in []monkey, divideBy3 bool) []monkey {
 
 	m := m_in
 
