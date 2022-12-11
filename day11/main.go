@@ -24,7 +24,7 @@ func main() {
 	fmt.Printf("Part2: %v\n", part2(getData()))
 }
 func part1(data []monkey) int {
-	return getScore(iterate(data, 20, true))
+	return getScore(iteratePart1(data, 20))
 }
 func part2(data []monkey) int {
 	return getScore(iteratePart2(data, 10000))
@@ -37,6 +37,40 @@ func getScore(m []monkey) int {
 	sort.Sort(sort.IntSlice(items))
 	return items[len(items)-1] * items[len(items)-2]
 }
+func iteratePart1(m_in []monkey, rounds int) []monkey {
+
+	m := m_in
+
+	for i := 0; i < rounds; i++ {
+		m = iterateSingleRoundPart1(m)
+	}
+
+	return m
+}
+func iterateSingleRoundPart1(m_in []monkey) []monkey {
+
+	m := m_in
+
+	for i := 0; i < len(m); i++ {
+		for j := 0; j < len(m[i].items); j++ {
+			newValue := m[i].operation(m[i].items[j])
+			newValue /= 3
+
+			if newValue%m[i].modulus == 0 {
+				target := m[i].targets[0]
+				m[target].items = append(m[target].items, newValue)
+			} else {
+				target := m[i].targets[1]
+				m[target].items = append(m[target].items, newValue)
+			}
+		}
+
+		m[i].inspections += len(m[i].items)
+		m[i].items = []int{}
+	}
+
+	return m
+}
 func iteratePart2(m_in []monkey, rounds int) []monkey {
 
 	m := m_in
@@ -47,19 +81,21 @@ func iteratePart2(m_in []monkey, rounds int) []monkey {
 
 	return m
 }
-func iterate(m_in []monkey, rounds int, divideBy3 bool) []monkey {
-
-	m := m_in
-
-	for i := 0; i < rounds; i++ {
-		m = iterateSingleRoundPart1(m, divideBy3)
-	}
-
-	return m
-}
 func iterateSingleRoundPart2(m_in []monkey) []monkey {
 
 	m := m_in
+
+	/*
+		I didn't figure this out myself, this comment on reddit game me this
+			solution:
+		https://www.reddit.com/r/adventofcode/comments/zihouc/comment/izrimjo
+
+		I had noticed that the modulus numbers were all prime (for test data
+			and real data), but I'm not sure that's relevant.
+
+		I've forgotten too much number theory to have worked this out myself
+			in a reasonable timeframe.
+	*/
 
 	modProduct := 1
 	for i := 0; i < len(m); i++ {
@@ -86,34 +122,6 @@ func iterateSingleRoundPart2(m_in []monkey) []monkey {
 
 	return m
 }
-func iterateSingleRoundPart1(m_in []monkey, divideBy3 bool) []monkey {
-
-	m := m_in
-
-	for i := 0; i < len(m); i++ {
-		for j := 0; j < len(m[i].items); j++ {
-			newValue := m[i].operation(m[i].items[j])
-
-			if divideBy3 {
-				newValue /= 3
-			}
-
-			if newValue%m[i].modulus == 0 {
-				target := m[i].targets[0]
-				m[target].items = append(m[target].items, newValue)
-			} else {
-				target := m[i].targets[1]
-				m[target].items = append(m[target].items, newValue)
-			}
-		}
-
-		m[i].inspections += len(m[i].items)
-		m[i].items = []int{}
-	}
-
-	return m
-}
-
 func getTestData() []monkey {
 	return []monkey{
 		{
