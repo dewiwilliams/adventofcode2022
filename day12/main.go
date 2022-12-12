@@ -49,7 +49,20 @@ func (h *heightMap) getAccessibleNeighbours(x, y int) []int {
 
 	return result
 }
-func (h *heightMap) traverse() int {
+func (h *heightMap) getReverseAccessibleNeighbours(x, y int) []int {
+	result := []int{}
+	point := x + y*h.width
+	neighbours := h.getNeighbours(x, y)
+
+	for _, n := range neighbours {
+		if h.values[point]-h.values[n] <= 1 {
+			result = append(result, n)
+		}
+	}
+
+	return result
+}
+func (h *heightMap) part1() int {
 	visited := make(map[int]int)
 	costMap := make(map[int]int)
 
@@ -57,9 +70,7 @@ func (h *heightMap) traverse() int {
 		costMap[i] = 999999999
 	}
 
-	result := h.traverseFromPoint(h.start, 0, costMap, visited)
-	//h.outputCostMap(costMap)
-	return result
+	return h.traverseFromPoint(h.start, 0, costMap, visited)
 }
 func (h *heightMap) outputCostMap(costMap map[int]int) {
 	for y := 0; y < h.height; y++ {
@@ -79,7 +90,7 @@ func (h *heightMap) outputCostMap(costMap map[int]int) {
 	}
 
 }
-func (h *heightMap) traverseFromPoint(p int, count int, costMap, visited map[int]int) int {
+func (h *heightMap) traverseFromPoint(p, count int, costMap, visited map[int]int) int {
 	result := 999999999
 	x := p % h.width
 	y := p / h.width
@@ -119,6 +130,67 @@ func (h *heightMap) traverseFromPoint(p int, count int, costMap, visited map[int
 
 	return result
 }
+func (h *heightMap) part2() int {
+	visited := make(map[int]int)
+	costMap := make(map[int]int)
+
+	for i := 0; i < h.width*h.height; i++ {
+		costMap[i] = 999999999
+	}
+
+	h.buildReverseCostMap(h.finish, 0, costMap, visited)
+	return h.findBestStartingPoint(costMap)
+}
+func (h *heightMap) findBestStartingPoint(costMap map[int]int) int {
+	lowest := 9999999
+
+	for i, c := range costMap {
+		if h.values[i] != 1 {
+			continue
+		}
+		if c < lowest {
+			lowest = c
+		}
+	}
+
+	return lowest
+}
+func (h *heightMap) buildReverseCostMap(p, count int, costMap, visited map[int]int) int {
+	result := 999999999
+	x := p % h.width
+	y := p / h.width
+	visited[p] = 1
+
+	h.iterations++
+
+	accessibleNeighbours := h.getReverseAccessibleNeighbours(x, y)
+
+	for i, n := range accessibleNeighbours {
+		if costMap[n] <= count+1 {
+			accessibleNeighbours[i] = h.width * h.height
+			continue
+		}
+		costMap[n] = count + 1
+	}
+
+	for _, n := range accessibleNeighbours {
+		if n == h.width*h.height {
+			continue
+		}
+		if visited[n] != 0 {
+			continue
+		}
+
+		pointCount := h.buildReverseCostMap(n, count+1, costMap, visited) + 1
+		if pointCount < result {
+			result = pointCount
+		}
+	}
+
+	visited[p] = 0
+
+	return result
+}
 
 func main() {
 	values, width, startFinish := getData("./input.txt")
@@ -131,7 +203,8 @@ func main() {
 		finish: startFinish[1],
 	}
 
-	fmt.Printf("Part 1: %d\n", h.traverse())
+	fmt.Printf("Part 1: %d\n", h.part1())
+	fmt.Printf("Part 2: %d\n", h.part2())
 	fmt.Printf("Iterations: %d\n", h.iterations)
 }
 func getRuneScore(r rune) int {
@@ -164,7 +237,6 @@ func getData(filename string) ([]int, int, [2]int) {
 		line := strings.TrimSpace(scanner.Text())
 		width = len(line)
 
-		//for i := 0; i < len(line); i++ {
 		for i, r := range line {
 			if r == 'S' {
 				startFinish[0] = i + lineNumber*width
