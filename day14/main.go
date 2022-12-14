@@ -17,22 +17,58 @@ func main() {
 	lines := getData("./input.txt")
 
 	fmt.Printf("Part 1: %d\n", part1(lines))
+	fmt.Printf("Part 2: %d\n", part2(lines))
 }
 
+func part2(dataLines [][]int) int {
+	data, width, _, _ := buildMap(dataLines)
+	addBottomLine(data, width)
+
+	for i := 0; i < 99999; i++ {
+		if dropSandPart2(data, width) {
+			return i + 1
+		}
+	}
+
+	return 0
+}
 func part1(dataLines [][]int) int {
 
 	data, width, _, _ := buildMap(dataLines)
 
 	for i := 0; i < 99999; i++ {
-		if dropSand(data, width) {
+		if dropSandPart1(data, width) {
 			return i
 		}
 	}
 
 	return 0
 }
+func dropSandPart2(data []int, width int) bool {
 
-func dropSand(data []int, width int) bool {
+	x := 500
+	y := 0
+
+	for {
+		down := x + (y+1)*width
+		downLeft := (x - 1) + (y+1)*width
+		downRight := (x + 1) + (y+1)*width
+
+		if data[down] == empty {
+			y++
+		} else if data[downLeft] == empty {
+			y++
+			x--
+		} else if data[downRight] == empty {
+			y++
+			x++
+		} else {
+			data[x+y*width] = sand
+			return x == 500 && y == 0
+		}
+	}
+}
+func dropSandPart1(data []int, width int) bool {
 
 	height := len(data) / width
 
@@ -67,15 +103,23 @@ func dropSand(data []int, width int) bool {
 func buildMap(data [][]int) ([]int, int, int, int) {
 	yMax := getLowestPoint(data)
 	xMin, xMax := getXRange(data)
-	width := xMax + 2
+	width := (xMax + 2) * 2
 
-	result := make([]int, (yMax+2)*width)
+	result := make([]int, (yMax+3)*width)
 
 	for _, wall := range data {
 		addWall(result, wall, width)
 	}
 
 	return result, width, xMin, xMax
+}
+func addBottomLine(data []int, width int) {
+	height := len(data) / width
+	bottomRow := height - 1
+
+	for x := 0; x < width; x++ {
+		data[x+bottomRow*width] = wall
+	}
 }
 func traceWall(target []int, width, startX, endX int) {
 	height := len(target) / width
