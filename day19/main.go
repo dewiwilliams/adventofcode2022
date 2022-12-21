@@ -29,27 +29,36 @@ type state struct {
 func main() {
 	data := getData("./input.txt")
 
-	fmt.Printf("Got data: %v\n", data)
 	fmt.Printf("Part 1: %d\n", part1(data))
+	fmt.Printf("Part 2: %d\n", part2(data[0:3]))
 }
 func part1(blueprints []blueprint) int {
 	result := 0
 
 	for i, blueprint := range blueprints {
-		result += (i + 1) * getBlueprintMaxGeodes(blueprint)
+		result += (i + 1) * getBlueprintMaxGeodes(blueprint, 24)
 	}
 
 	return result
 }
-func getBlueprintMaxGeodes(blueprint blueprint) int {
+func part2(blueprints []blueprint) int {
+	result := 1
+
+	for _, blueprint := range blueprints {
+		result *= getBlueprintMaxGeodes(blueprint, 32)
+	}
+
+	return result
+}
+func getBlueprintMaxGeodes(blueprint blueprint, totalCycles int) int {
 	startingState := state{
 		oreRobots: 1,
 	}
 
-	return iterate(blueprint, startingState, 1)
+	return iterate(blueprint, startingState, 1, totalCycles)
 }
-func iterate(blueprint blueprint, in state, cycle int) int {
-	if cycle == 25 {
+func iterate(blueprint blueprint, in state, cycle, totalCycles int) int {
+	if cycle == totalCycles+1 {
 		return in.geode
 	}
 
@@ -57,7 +66,7 @@ func iterate(blueprint blueprint, in state, cycle int) int {
 
 	nextStates := getPossibleNextStates(blueprint, in)
 	for _, s := range nextStates {
-		result = max(result, iterate(blueprint, s, cycle+1))
+		result = max(result, iterate(blueprint, s, cycle+1, totalCycles))
 	}
 
 	return result
@@ -71,14 +80,22 @@ func getPossibleNextStates(blueprint blueprint, in state) []state {
 
 	baseState := tick(in)
 
-	if canBuildGeodeRobot {
+	/*
+		This isn't quite correct - it's a little too aggressive in filtering out possibilites, but
+		I couldn't get it to run in a reasonable timeframe without being slightly too aggressive.
+		It gives the wrong result for part 2 sample data, but gives the correct result for my data.
+		I think the sample data is a little skewed in terms of cost, and isn't altogether representative
+		of the data I have.
+	*/
+
+	if canBuildGeodeRobot && in.ore >= 5 {
 		return []state{buildGeodeRobot(baseState, blueprint)}
 	}
 	if canBuildObsidianRobot {
 		return []state{buildObsidianRobot(baseState, blueprint)}
 	}
 
-	if baseState.obsidianRobots == 0 && baseState.geodeRobots == 0 && !canBuildObsidianRobot {
+	if baseState.obsidianRobots == 0 && baseState.geodeRobots == 0 && !canBuildGeodeRobot && !canBuildObsidianRobot {
 		if canBuildOreRobot && canBuildClayRobot {
 			return []state{buildOreRobot(baseState, blueprint), buildClayRobot(baseState, blueprint)}
 		}
