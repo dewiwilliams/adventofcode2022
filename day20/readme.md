@@ -1,386 +1,112 @@
 # Advent of code 2022
 
-## Day 19: Not Enough Minerals
+## Day 20: Grove Positioning System
 
-Your scans show that the lava did indeed form obsidian!
+It's finally time to meet back up with the Elves. When you try to contact them, however, you get no reply. Perhaps you're out of range?
 
-The wind has changed direction enough to stop sending lava droplets toward you, so you and the elephants exit the cave. As you do, you notice a collection of geodes around the pond. Perhaps you could use the obsidian to create some geode-cracking robots and break them open?
+You know they're headed to the grove where the star fruit grows, so if you can figure out where that is, you should be able to meet back up with them.
 
-To collect the obsidian from the bottom of the pond, you'll need waterproof obsidian-collecting robots. Fortunately, there is an abundant amount of clay nearby that you can use to make them waterproof.
+Fortunately, your handheld device has a file (your puzzle input) that contains the grove's coordinates! Unfortunately, the file is encrypted - just in case the device were to fall into the wrong hands.
 
-In order to harvest the clay, you'll need special-purpose clay-collecting robots. To make any type of robot, you'll need ore, which is also plentiful but in the opposite direction from the clay.
+Maybe you can decrypt it?
 
-Collecting ore requires ore-collecting robots with big drills. Fortunately, you have exactly one ore-collecting robot in your pack that you can use to kickstart the whole operation.
+When you were still back at the camp, you overheard some Elves talking about coordinate file encryption. The main operation involved in decrypting the file is called mixing.
 
-Each robot can collect 1 of its resource type per minute. It also takes one minute for the robot factory (also conveniently from your pack) to construct any type of robot, although it consumes the necessary resources available when construction begins.
+The encrypted file is a list of numbers. To mix the file, move each number forward or backward in the file a number of positions equal to the value of the number being moved. The list is circular, so moving a number off one end of the list wraps back around to the other end as if the ends were connected.
 
-The robot factory has many blueprints (your puzzle input) you can choose from, but once you've configured it with a blueprint, you can't change it. You'll need to work out which blueprint is best.
+For example, to move the 1 in a sequence like 4, 5, 6, 1, 7, 8, 9, the 1 moves one position forward: 4, 5, 6, 7, 1, 8, 9. To move the -2 in a sequence like 4, -2, 5, 6, 7, 8, 9, the -2 moves two positions backward, wrapping around: 4, 5, 6, 7, 8, -2, 9.
 
-For example:
+The numbers should be moved in the order they originally appear in the encrypted file. Numbers moving around during the mixing process do not change the order in which the numbers are moved.
 
-```
-Blueprint 1:
-  Each ore robot costs 4 ore.
-  Each clay robot costs 2 ore.
-  Each obsidian robot costs 3 ore and 14 clay.
-  Each geode robot costs 2 ore and 7 obsidian.
-
-Blueprint 2:
-  Each ore robot costs 2 ore.
-  Each clay robot costs 3 ore.
-  Each obsidian robot costs 3 ore and 8 clay.
-  Each geode robot costs 3 ore and 12 obsidian.
-```
-
-(Blueprints have been line-wrapped here for legibility. The robot factory's actual assortment of blueprints are provided one blueprint per line.)
-
-The elephants are starting to look hungry, so you shouldn't take too long; you need to figure out which blueprint would maximize the number of opened geodes after 24 minutes by figuring out which robots to build and when to build them.
-
-Using blueprint 1 in the example above, the largest number of geodes you could open in 24 minutes is 9. One way to achieve that is:
+Consider this encrypted file:
 
 ```
-== Minute 1 ==
-1 ore-collecting robot collects 1 ore; you now have 1 ore.
-
-== Minute 2 ==
-1 ore-collecting robot collects 1 ore; you now have 2 ore.
-
-== Minute 3 ==
-Spend 2 ore to start building a clay-collecting robot.
-1 ore-collecting robot collects 1 ore; you now have 1 ore.
-The new clay-collecting robot is ready; you now have 1 of them.
-
-== Minute 4 ==
-1 ore-collecting robot collects 1 ore; you now have 2 ore.
-1 clay-collecting robot collects 1 clay; you now have 1 clay.
-
-== Minute 5 ==
-Spend 2 ore to start building a clay-collecting robot.
-1 ore-collecting robot collects 1 ore; you now have 1 ore.
-1 clay-collecting robot collects 1 clay; you now have 2 clay.
-The new clay-collecting robot is ready; you now have 2 of them.
-
-== Minute 6 ==
-1 ore-collecting robot collects 1 ore; you now have 2 ore.
-2 clay-collecting robots collect 2 clay; you now have 4 clay.
-
-== Minute 7 ==
-Spend 2 ore to start building a clay-collecting robot.
-1 ore-collecting robot collects 1 ore; you now have 1 ore.
-2 clay-collecting robots collect 2 clay; you now have 6 clay.
-The new clay-collecting robot is ready; you now have 3 of them.
-
-== Minute 8 ==
-1 ore-collecting robot collects 1 ore; you now have 2 ore.
-3 clay-collecting robots collect 3 clay; you now have 9 clay.
-
-== Minute 9 ==
-1 ore-collecting robot collects 1 ore; you now have 3 ore.
-3 clay-collecting robots collect 3 clay; you now have 12 clay.
-
-== Minute 10 ==
-1 ore-collecting robot collects 1 ore; you now have 4 ore.
-3 clay-collecting robots collect 3 clay; you now have 15 clay.
-
-== Minute 11 ==
-Spend 3 ore and 14 clay to start building an obsidian-collecting robot.
-1 ore-collecting robot collects 1 ore; you now have 2 ore.
-3 clay-collecting robots collect 3 clay; you now have 4 clay.
-The new obsidian-collecting robot is ready; you now have 1 of them.
-
-== Minute 12 ==
-Spend 2 ore to start building a clay-collecting robot.
-1 ore-collecting robot collects 1 ore; you now have 1 ore.
-3 clay-collecting robots collect 3 clay; you now have 7 clay.
-1 obsidian-collecting robot collects 1 obsidian; you now have 1 obsidian.
-The new clay-collecting robot is ready; you now have 4 of them.
-
-== Minute 13 ==
-1 ore-collecting robot collects 1 ore; you now have 2 ore.
-4 clay-collecting robots collect 4 clay; you now have 11 clay.
-1 obsidian-collecting robot collects 1 obsidian; you now have 2 obsidian.
-
-== Minute 14 ==
-1 ore-collecting robot collects 1 ore; you now have 3 ore.
-4 clay-collecting robots collect 4 clay; you now have 15 clay.
-1 obsidian-collecting robot collects 1 obsidian; you now have 3 obsidian.
-
-== Minute 15 ==
-Spend 3 ore and 14 clay to start building an obsidian-collecting robot.
-1 ore-collecting robot collects 1 ore; you now have 1 ore.
-4 clay-collecting robots collect 4 clay; you now have 5 clay.
-1 obsidian-collecting robot collects 1 obsidian; you now have 4 obsidian.
-The new obsidian-collecting robot is ready; you now have 2 of them.
-
-== Minute 16 ==
-1 ore-collecting robot collects 1 ore; you now have 2 ore.
-4 clay-collecting robots collect 4 clay; you now have 9 clay.
-2 obsidian-collecting robots collect 2 obsidian; you now have 6 obsidian.
-
-== Minute 17 ==
-1 ore-collecting robot collects 1 ore; you now have 3 ore.
-4 clay-collecting robots collect 4 clay; you now have 13 clay.
-2 obsidian-collecting robots collect 2 obsidian; you now have 8 obsidian.
-
-== Minute 18 ==
-Spend 2 ore and 7 obsidian to start building a geode-cracking robot.
-1 ore-collecting robot collects 1 ore; you now have 2 ore.
-4 clay-collecting robots collect 4 clay; you now have 17 clay.
-2 obsidian-collecting robots collect 2 obsidian; you now have 3 obsidian.
-The new geode-cracking robot is ready; you now have 1 of them.
-
-== Minute 19 ==
-1 ore-collecting robot collects 1 ore; you now have 3 ore.
-4 clay-collecting robots collect 4 clay; you now have 21 clay.
-2 obsidian-collecting robots collect 2 obsidian; you now have 5 obsidian.
-1 geode-cracking robot cracks 1 geode; you now have 1 open geode.
-
-== Minute 20 ==
-1 ore-collecting robot collects 1 ore; you now have 4 ore.
-4 clay-collecting robots collect 4 clay; you now have 25 clay.
-2 obsidian-collecting robots collect 2 obsidian; you now have 7 obsidian.
-1 geode-cracking robot cracks 1 geode; you now have 2 open geodes.
-
-== Minute 21 ==
-Spend 2 ore and 7 obsidian to start building a geode-cracking robot.
-1 ore-collecting robot collects 1 ore; you now have 3 ore.
-4 clay-collecting robots collect 4 clay; you now have 29 clay.
-2 obsidian-collecting robots collect 2 obsidian; you now have 2 obsidian.
-1 geode-cracking robot cracks 1 geode; you now have 3 open geodes.
-The new geode-cracking robot is ready; you now have 2 of them.
-
-== Minute 22 ==
-1 ore-collecting robot collects 1 ore; you now have 4 ore.
-4 clay-collecting robots collect 4 clay; you now have 33 clay.
-2 obsidian-collecting robots collect 2 obsidian; you now have 4 obsidian.
-2 geode-cracking robots crack 2 geodes; you now have 5 open geodes.
-
-== Minute 23 ==
-1 ore-collecting robot collects 1 ore; you now have 5 ore.
-4 clay-collecting robots collect 4 clay; you now have 37 clay.
-2 obsidian-collecting robots collect 2 obsidian; you now have 6 obsidian.
-2 geode-cracking robots crack 2 geodes; you now have 7 open geodes.
-
-== Minute 24 ==
-1 ore-collecting robot collects 1 ore; you now have 6 ore.
-4 clay-collecting robots collect 4 clay; you now have 41 clay.
-2 obsidian-collecting robots collect 2 obsidian; you now have 8 obsidian.
-2 geode-cracking robots crack 2 geodes; you now have 9 open geodes.
+1
+2
+-3
+3
+-2
+0
+4
 ```
 
-However, by using blueprint 2 in the example above, you could do even better: the largest number of geodes you could open in 24 minutes is 12.
+Mixing this file proceeds as follows:
 
-Determine the quality level of each blueprint by multiplying that blueprint's ID number with the largest number of geodes that can be opened in 24 minutes using that blueprint. In this example, the first blueprint has ID 1 and can open 9 geodes, so its quality level is 9. The second blueprint has ID 2 and can open 12 geodes, so its quality level is 24. Finally, if you add up the quality levels of all of the blueprints in the list, you get 33.
+```
+Initial arrangement:
+1, 2, -3, 3, -2, 0, 4
 
-Determine the quality level of each blueprint using the largest number of geodes it could produce in 24 minutes. What do you get if you add up the quality level of all of the blueprints in your list?
+1 moves between 2 and -3:
+2, 1, -3, 3, -2, 0, 4
+
+2 moves between -3 and 3:
+1, -3, 2, 3, -2, 0, 4
+
+-3 moves between -2 and 0:
+1, 2, 3, -2, -3, 0, 4
+
+3 moves between 0 and 4:
+1, 2, -2, -3, 0, 3, 4
+
+-2 moves between 4 and 1:
+1, 2, -3, 0, 3, 4, -2
+
+0 does not move:
+1, 2, -3, 0, 3, 4, -2
+
+4 moves between -3 and 0:
+1, 2, -3, 4, 0, 3, -2
+```
+
+Then, the grove coordinates can be found by looking at the 1000th, 2000th, and 3000th numbers after the value 0, wrapping around the list as necessary. In the above example, the 1000th number after 0 is 4, the 2000th is -3, and the 3000th is 2; adding these together produces 3.
+
+Mix your encrypted file exactly once. What is the sum of the three numbers that form the grove coordinates?
 
 ## Part Two
 
-While you were choosing the best blueprint, the elephants found some food on their own, so you're not in as much of a hurry; you figure you probably have 32 minutes before the wind changes direction again and you'll need to get out of range of the erupting volcano.
+The grove coordinate values seem nonsensical. While you ponder the mysteries of Elf encryption, you suddenly remember the rest of the decryption routine you overheard back at camp.
 
-Unfortunately, one of the elephants ate most of your blueprint list! Now, only the first three blueprints in your list are intact.
+First, you need to apply the decryption key, 811589153. Multiply each number by the decryption key before you begin; this will produce the actual list of numbers to mix.
 
-In 32 minutes, the largest number of geodes blueprint 1 (from the example above) can open is 56. One way to achieve that is:
+Second, you need to mix the list of numbers ten times. The order in which the numbers are mixed does not change during mixing; the numbers are still moved in the order they appeared in the original, pre-mixed list. (So, if -3 appears fourth in the original list of numbers to mix, -3 will be the fourth number to move during each round of mixing.)
+
+Using the same example as above:
 
 ```
-== Minute 1 ==
-1 ore-collecting robot collects 1 ore; you now have 1 ore.
+Initial arrangement:
+811589153, 1623178306, -2434767459, 2434767459, -1623178306, 0, 3246356612
 
-== Minute 2 ==
-1 ore-collecting robot collects 1 ore; you now have 2 ore.
+After 1 round of mixing:
+0, -2434767459, 3246356612, -1623178306, 2434767459, 1623178306, 811589153
 
-== Minute 3 ==
-1 ore-collecting robot collects 1 ore; you now have 3 ore.
+After 2 rounds of mixing:
+0, 2434767459, 1623178306, 3246356612, -2434767459, -1623178306, 811589153
 
-== Minute 4 ==
-1 ore-collecting robot collects 1 ore; you now have 4 ore.
+After 3 rounds of mixing:
+0, 811589153, 2434767459, 3246356612, 1623178306, -1623178306, -2434767459
 
-== Minute 5 ==
-Spend 4 ore to start building an ore-collecting robot.
-1 ore-collecting robot collects 1 ore; you now have 1 ore.
-The new ore-collecting robot is ready; you now have 2 of them.
+After 4 rounds of mixing:
+0, 1623178306, -2434767459, 811589153, 2434767459, 3246356612, -1623178306
 
-== Minute 6 ==
-2 ore-collecting robots collect 2 ore; you now have 3 ore.
+After 5 rounds of mixing:
+0, 811589153, -1623178306, 1623178306, -2434767459, 3246356612, 2434767459
 
-== Minute 7 ==
-Spend 2 ore to start building a clay-collecting robot.
-2 ore-collecting robots collect 2 ore; you now have 3 ore.
-The new clay-collecting robot is ready; you now have 1 of them.
+After 6 rounds of mixing:
+0, 811589153, -1623178306, 3246356612, -2434767459, 1623178306, 2434767459
 
-== Minute 8 ==
-Spend 2 ore to start building a clay-collecting robot.
-2 ore-collecting robots collect 2 ore; you now have 3 ore.
-1 clay-collecting robot collects 1 clay; you now have 1 clay.
-The new clay-collecting robot is ready; you now have 2 of them.
+After 7 rounds of mixing:
+0, -2434767459, 2434767459, 1623178306, -1623178306, 811589153, 3246356612
 
-== Minute 9 ==
-Spend 2 ore to start building a clay-collecting robot.
-2 ore-collecting robots collect 2 ore; you now have 3 ore.
-2 clay-collecting robots collect 2 clay; you now have 3 clay.
-The new clay-collecting robot is ready; you now have 3 of them.
+After 8 rounds of mixing:
+0, 1623178306, 3246356612, 811589153, -2434767459, 2434767459, -1623178306
 
-== Minute 10 ==
-Spend 2 ore to start building a clay-collecting robot.
-2 ore-collecting robots collect 2 ore; you now have 3 ore.
-3 clay-collecting robots collect 3 clay; you now have 6 clay.
-The new clay-collecting robot is ready; you now have 4 of them.
+After 9 rounds of mixing:
+0, 811589153, 1623178306, -2434767459, 3246356612, 2434767459, -1623178306
 
-== Minute 11 ==
-Spend 2 ore to start building a clay-collecting robot.
-2 ore-collecting robots collect 2 ore; you now have 3 ore.
-4 clay-collecting robots collect 4 clay; you now have 10 clay.
-The new clay-collecting robot is ready; you now have 5 of them.
-
-== Minute 12 ==
-Spend 2 ore to start building a clay-collecting robot.
-2 ore-collecting robots collect 2 ore; you now have 3 ore.
-5 clay-collecting robots collect 5 clay; you now have 15 clay.
-The new clay-collecting robot is ready; you now have 6 of them.
-
-== Minute 13 ==
-Spend 2 ore to start building a clay-collecting robot.
-2 ore-collecting robots collect 2 ore; you now have 3 ore.
-6 clay-collecting robots collect 6 clay; you now have 21 clay.
-The new clay-collecting robot is ready; you now have 7 of them.
-
-== Minute 14 ==
-Spend 3 ore and 14 clay to start building an obsidian-collecting robot.
-2 ore-collecting robots collect 2 ore; you now have 2 ore.
-7 clay-collecting robots collect 7 clay; you now have 14 clay.
-The new obsidian-collecting robot is ready; you now have 1 of them.
-
-== Minute 15 ==
-2 ore-collecting robots collect 2 ore; you now have 4 ore.
-7 clay-collecting robots collect 7 clay; you now have 21 clay.
-1 obsidian-collecting robot collects 1 obsidian; you now have 1 obsidian.
-
-== Minute 16 ==
-Spend 3 ore and 14 clay to start building an obsidian-collecting robot.
-2 ore-collecting robots collect 2 ore; you now have 3 ore.
-7 clay-collecting robots collect 7 clay; you now have 14 clay.
-1 obsidian-collecting robot collects 1 obsidian; you now have 2 obsidian.
-The new obsidian-collecting robot is ready; you now have 2 of them.
-
-== Minute 17 ==
-Spend 3 ore and 14 clay to start building an obsidian-collecting robot.
-2 ore-collecting robots collect 2 ore; you now have 2 ore.
-7 clay-collecting robots collect 7 clay; you now have 7 clay.
-2 obsidian-collecting robots collect 2 obsidian; you now have 4 obsidian.
-The new obsidian-collecting robot is ready; you now have 3 of them.
-
-== Minute 18 ==
-2 ore-collecting robots collect 2 ore; you now have 4 ore.
-7 clay-collecting robots collect 7 clay; you now have 14 clay.
-3 obsidian-collecting robots collect 3 obsidian; you now have 7 obsidian.
-
-== Minute 19 ==
-Spend 3 ore and 14 clay to start building an obsidian-collecting robot.
-2 ore-collecting robots collect 2 ore; you now have 3 ore.
-7 clay-collecting robots collect 7 clay; you now have 7 clay.
-3 obsidian-collecting robots collect 3 obsidian; you now have 10 obsidian.
-The new obsidian-collecting robot is ready; you now have 4 of them.
-
-== Minute 20 ==
-Spend 2 ore and 7 obsidian to start building a geode-cracking robot.
-2 ore-collecting robots collect 2 ore; you now have 3 ore.
-7 clay-collecting robots collect 7 clay; you now have 14 clay.
-4 obsidian-collecting robots collect 4 obsidian; you now have 7 obsidian.
-The new geode-cracking robot is ready; you now have 1 of them.
-
-== Minute 21 ==
-Spend 3 ore and 14 clay to start building an obsidian-collecting robot.
-2 ore-collecting robots collect 2 ore; you now have 2 ore.
-7 clay-collecting robots collect 7 clay; you now have 7 clay.
-4 obsidian-collecting robots collect 4 obsidian; you now have 11 obsidian.
-1 geode-cracking robot cracks 1 geode; you now have 1 open geode.
-The new obsidian-collecting robot is ready; you now have 5 of them.
-
-== Minute 22 ==
-Spend 2 ore and 7 obsidian to start building a geode-cracking robot.
-2 ore-collecting robots collect 2 ore; you now have 2 ore.
-7 clay-collecting robots collect 7 clay; you now have 14 clay.
-5 obsidian-collecting robots collect 5 obsidian; you now have 9 obsidian.
-1 geode-cracking robot cracks 1 geode; you now have 2 open geodes.
-The new geode-cracking robot is ready; you now have 2 of them.
-
-== Minute 23 ==
-Spend 2 ore and 7 obsidian to start building a geode-cracking robot.
-2 ore-collecting robots collect 2 ore; you now have 2 ore.
-7 clay-collecting robots collect 7 clay; you now have 21 clay.
-5 obsidian-collecting robots collect 5 obsidian; you now have 7 obsidian.
-2 geode-cracking robots crack 2 geodes; you now have 4 open geodes.
-The new geode-cracking robot is ready; you now have 3 of them.
-
-== Minute 24 ==
-Spend 2 ore and 7 obsidian to start building a geode-cracking robot.
-2 ore-collecting robots collect 2 ore; you now have 2 ore.
-7 clay-collecting robots collect 7 clay; you now have 28 clay.
-5 obsidian-collecting robots collect 5 obsidian; you now have 5 obsidian.
-3 geode-cracking robots crack 3 geodes; you now have 7 open geodes.
-The new geode-cracking robot is ready; you now have 4 of them.
-
-== Minute 25 ==
-2 ore-collecting robots collect 2 ore; you now have 4 ore.
-7 clay-collecting robots collect 7 clay; you now have 35 clay.
-5 obsidian-collecting robots collect 5 obsidian; you now have 10 obsidian.
-4 geode-cracking robots crack 4 geodes; you now have 11 open geodes.
-
-== Minute 26 ==
-Spend 2 ore and 7 obsidian to start building a geode-cracking robot.
-2 ore-collecting robots collect 2 ore; you now have 4 ore.
-7 clay-collecting robots collect 7 clay; you now have 42 clay.
-5 obsidian-collecting robots collect 5 obsidian; you now have 8 obsidian.
-4 geode-cracking robots crack 4 geodes; you now have 15 open geodes.
-The new geode-cracking robot is ready; you now have 5 of them.
-
-== Minute 27 ==
-Spend 2 ore and 7 obsidian to start building a geode-cracking robot.
-2 ore-collecting robots collect 2 ore; you now have 4 ore.
-7 clay-collecting robots collect 7 clay; you now have 49 clay.
-5 obsidian-collecting robots collect 5 obsidian; you now have 6 obsidian.
-5 geode-cracking robots crack 5 geodes; you now have 20 open geodes.
-The new geode-cracking robot is ready; you now have 6 of them.
-
-== Minute 28 ==
-2 ore-collecting robots collect 2 ore; you now have 6 ore.
-7 clay-collecting robots collect 7 clay; you now have 56 clay.
-5 obsidian-collecting robots collect 5 obsidian; you now have 11 obsidian.
-6 geode-cracking robots crack 6 geodes; you now have 26 open geodes.
-
-== Minute 29 ==
-Spend 2 ore and 7 obsidian to start building a geode-cracking robot.
-2 ore-collecting robots collect 2 ore; you now have 6 ore.
-7 clay-collecting robots collect 7 clay; you now have 63 clay.
-5 obsidian-collecting robots collect 5 obsidian; you now have 9 obsidian.
-6 geode-cracking robots crack 6 geodes; you now have 32 open geodes.
-The new geode-cracking robot is ready; you now have 7 of them.
-
-== Minute 30 ==
-Spend 2 ore and 7 obsidian to start building a geode-cracking robot.
-2 ore-collecting robots collect 2 ore; you now have 6 ore.
-7 clay-collecting robots collect 7 clay; you now have 70 clay.
-5 obsidian-collecting robots collect 5 obsidian; you now have 7 obsidian.
-7 geode-cracking robots crack 7 geodes; you now have 39 open geodes.
-The new geode-cracking robot is ready; you now have 8 of them.
-
-== Minute 31 ==
-Spend 2 ore and 7 obsidian to start building a geode-cracking robot.
-2 ore-collecting robots collect 2 ore; you now have 6 ore.
-7 clay-collecting robots collect 7 clay; you now have 77 clay.
-5 obsidian-collecting robots collect 5 obsidian; you now have 5 obsidian.
-8 geode-cracking robots crack 8 geodes; you now have 47 open geodes.
-The new geode-cracking robot is ready; you now have 9 of them.
-
-== Minute 32 ==
-2 ore-collecting robots collect 2 ore; you now have 8 ore.
-7 clay-collecting robots collect 7 clay; you now have 84 clay.
-5 obsidian-collecting robots collect 5 obsidian; you now have 10 obsidian.
-9 geode-cracking robots crack 9 geodes; you now have 56 open geodes.
+After 10 rounds of mixing:
+0, -2434767459, 1623178306, 3246356612, -1623178306, 2434767459, 811589153
 ```
 
-However, blueprint 2 from the example above is still better; using it, the largest number of geodes you could open in 32 minutes is 62.
+The grove coordinates can still be found in the same way. Here, the 1000th number after 0 is 811589153, the 2000th is 2434767459, and the 3000th is -1623178306; adding these together produces 1623178306.
 
-You no longer have enough blueprints to worry about quality levels. Instead, for each of the first three blueprints, determine the largest number of geodes you could open; then, multiply these three values together.
-
-Don't worry about quality levels; instead, just determine the largest number of geodes you could open using each of the first three blueprints. What do you get if you multiply these numbers together?
+Apply the decryption key and mix your encrypted file ten times. What is the sum of the three numbers that form the grove coordinates?

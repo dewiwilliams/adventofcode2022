@@ -12,6 +12,46 @@ func main() {
 	data := getData("./input.txt")
 
 	fmt.Printf("Part 1: %d\n", part1(data))
+	fmt.Printf("Part 2: %d\n", part2(data))
+}
+func part2(data []int) int {
+	workspace := make([]int, len(data))
+	copy(workspace, data)
+
+	ordering := []int{}
+	for i := range data {
+		ordering = append(ordering, i)
+		workspace[i] *= 811589153
+	}
+
+	for j := 0; j < 10; j++ {
+		for i := range data {
+			index := indexOf(ordering, i)
+			value := workspace[index]
+			if value == 0 {
+				continue
+			}
+
+			workspace = removeInt(workspace, index)
+			ordering = removeInt(ordering, index)
+			index += value
+
+			if index < 0 {
+				index += (-index / len(workspace)) * len(workspace)
+				index += len(workspace)
+			}
+			index %= len(workspace)
+
+			workspace = insertInt(workspace, value, index)
+			ordering = insertInt(ordering, i, index)
+		}
+	}
+
+	zeroPosition := indexOf(workspace, 0)
+
+	return getItemAtIndex(workspace, zeroPosition+1000) +
+		getItemAtIndex(workspace, zeroPosition+2000) +
+		getItemAtIndex(workspace, zeroPosition+3000)
 }
 func part1(data []int) int {
 	workspace := make([]int, len(data))
