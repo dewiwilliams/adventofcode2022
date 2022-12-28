@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sort"
 )
 
 const north = 10
@@ -25,18 +24,27 @@ type blizzard struct {
 func main() {
 	filename := "./input.txt"
 	fmt.Printf("Part 1: %d\n", part1(filename))
+	fmt.Printf("Part 2: %d\n", part2(filename))
 }
 func part1(filename string) int {
 
 	grid, width, blizzards := getData(filename)
 	height := len(grid) / width
-	fmt.Printf("Blizzards area: %d X %d\n", width-2, height-2)
 
-	bestResult := 1000
-	statesSeen := []int{}
-	search(grid, width, [][]blizzard{blizzards}, 0, 1, &statesSeen, &bestResult)
+	result, _ := search(grid, width, blizzards, 1, width*height-2)
+	return result
+}
+func part2(filename string) int {
+	grid, width, blizzards := getData(filename)
+	height := len(grid) / width
 
-	return bestResult
+	step1, nextBlizzardState := search(grid, width, blizzards, 1, width*height-2)
+	step2, nextBlizzardState := search(grid, width, nextBlizzardState, width*height-2, 1)
+	step3, _ := search(grid, width, nextBlizzardState, 1, width*height-2)
+
+	fmt.Printf("Results: %d, %d, %d\n", step1, step2, step3)
+
+	return step1 + step2 + step3
 }
 func blizzardsEqual(blizzards1, blizzards2 []blizzard) bool {
 	for i := range blizzards1 {
@@ -46,44 +54,63 @@ func blizzardsEqual(blizzards1, blizzards2 []blizzard) bool {
 	}
 	return true
 }
-func search(grid []int, width int, blizzards [][]blizzard, stepNumber, position int, statesSeen *[]int, bestResult *int) {
-	if stepNumber > *bestResult {
-		return
+
+func search(grid []int, width int, initialBlizzards []blizzard, start, end int) (int, []blizzard) {
+
+	if grid[start] != empty || grid[end] != empty {
+		log.Fatal("Start/end is not empty!")
+	}
+
+	type stepState struct {
+		stepNumber int
+		position   int
+	}
+
+	statesToProcess := []stepState{
+		{stepNumber: 0, position: start},
 	}
 
 	height := len(grid) / width
-	stateIndex := position + (stepNumber * 10000)
-	if contains(*statesSeen, stateIndex) {
-		return
-	}
-	*statesSeen = append(*statesSeen, stateIndex)
+	blizzards := [][]blizzard{initialBlizzards}
 
-	/*if len(*statesSeen)%1000 == 0 {
-		fmt.Printf("Seen %d states\n", len(*statesSeen))
-	}*/
+	statesSeen := []int{}
 
-	if stepNumber >= len(blizzards) {
-		blizzards = append(blizzards, stepBlizzards(width, height, blizzards[len(blizzards)-1]))
-	}
+	for len(statesToProcess) > 0 {
+		state := statesToProcess[0]
+		statesToProcess = statesToProcess[1:]
 
-	validMoves := getValidMoves(grid, width, blizzards[stepNumber], position)
-	sort.Sort(sort.Reverse(sort.IntSlice(validMoves)))
+		stateIndex := state.position + (state.stepNumber * 10000)
+		if contains(statesSeen, stateIndex) {
+			continue
+		}
+		statesSeen = append(statesSeen, stateIndex)
 
-	for _, nextPosition := range validMoves {
-		if nextPosition == width*height-2 {
-			if stepNumber < *bestResult {
-				fmt.Printf("Lowering best result: %d -> %d\n", *bestResult, stepNumber)
-				*bestResult = stepNumber
-			}
-			return
+		if state.stepNumber >= len(blizzards)-1 {
+			blizzards = append(blizzards, stepBlizzards(width, height, blizzards[len(blizzards)-1]))
+			fmt.Printf("On step: %d\n", state.stepNumber)
 		}
 
-		search(grid, width, blizzards, stepNumber+1, nextPosition, statesSeen, bestResult)
+		validMoves := getValidMoves(grid, width, blizzards[state.stepNumber+1], state.position)
+
+		for _, nextPosition := range validMoves {
+			if nextPosition == end {
+				return state.stepNumber + 1, blizzards[state.stepNumber+1]
+			}
+
+			nextState := stepState{
+				stepNumber: state.stepNumber + 1,
+				position:   nextPosition,
+			}
+			statesToProcess = append(statesToProcess, nextState)
+		}
 	}
+
+	return -1, []blizzard{}
 }
 func getValidMoves(grid []int, width int, blizzards []blizzard, position int) []int {
 	result := []int{}
 
+	height := len(grid) / width
 	x := position % width
 	y := position / width
 
@@ -99,7 +126,7 @@ func getValidMoves(grid []int, width int, blizzards []blizzard, position int) []
 	if y > 0 && grid[position-width] != wall && !isInBlizzard(x, y-1, blizzards) {
 		result = append(result, position-width)
 	}
-	if grid[position+width] != wall && !isInBlizzard(x, y+1, blizzards) {
+	if y < height-1 && grid[position+width] != wall && !isInBlizzard(x, y+1, blizzards) {
 		result = append(result, position+width)
 	}
 
@@ -172,29 +199,30 @@ func composeGrid(grid []int, width int, blizzards []blizzard) []int {
 func stepBlizzards(width, height int, blizzards []blizzard) []blizzard {
 	result := make([]blizzard, len(blizzards))
 
-	emptySpaceWidth := width - 2
-	emptySpaceHeight := height - 2
-
 	for i := range blizzards {
 		result[i] = blizzards[i]
 
 		if result[i].direction == north {
-			result[i].y += (emptySpaceHeight - 1)
+			result[i].y--
+			if result[i].y == 0 {
+				result[i].y = height - 2
+			}
 		} else if result[i].direction == south {
 			result[i].y++
+			if result[i].y == height-1 {
+				result[i].y = 1
+			}
 		} else if result[i].direction == west {
-			result[i].x += (emptySpaceWidth - 1)
+			result[i].x--
+			if result[i].x == 0 {
+				result[i].x = width - 2
+			}
 		} else if result[i].direction == east {
 			result[i].x++
+			if result[i].x == width-1 {
+				result[i].x = 1
+			}
 		}
-
-		result[i].x--
-		result[i].x %= emptySpaceWidth
-		result[i].x++
-
-		result[i].y--
-		result[i].y %= emptySpaceHeight
-		result[i].y++
 	}
 
 	return result
