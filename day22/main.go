@@ -21,27 +21,41 @@ const up = 3
 func main() {
 	data, width, instructions := getData("./input.txt")
 
-	printBoard(data, width)
+	//printBoard(data, width)
 	//fmt.Printf("Instructions: %v\n", instructions)
 
 	fmt.Printf("Part 1: %d\n", part1(data, width, instructions))
+	fmt.Printf("Part 2: %d\n", part2(data, width, instructions))
 }
-func part1(data []int, width int, instructions []int) int {
+func part2(data []int, width int, instructions []int) int {
 	cell := findTopLeft(data, width)
-	fmt.Printf("Got topleft: %d\n", cell)
 	facing := right
+
+	fmt.Printf("Top left: %d, %d\n", cell%width, cell/width)
 
 	for i, instruction := range instructions {
 		if i%2 == 0 {
-			cell = moveForward(data, width, cell, facing, instruction)
+			cell, facing = moveForwardCube(data, width, cell, facing, instruction)
 		} else {
 			facing = getNextDirection(facing, instruction)
 		}
+
+		/*fmt.Printf("Moved to (%d, %d), %d\n", cell%width, cell/width, facing)
+
+		if i > 10 {
+			break
+		}*/
 	}
 
+	// 93210  too low
+	// 133229 too low
+	// 884470 too high
+
+	return getPassword(cell, width, facing)
+}
+func getPassword(cell, width, facing int) int {
 	x := cell % width
 	y := cell / width
-	fmt.Printf("End: %d, %d, %d\n", x, y, facing)
 
 	return (y+1)*1000 + (x+1)*4 + facing
 }
@@ -54,6 +68,21 @@ func getNextDirection(current, turn int) int {
 	current %= 4
 	return current
 }
+func moveForwardCube(data []int, width, cell, facing, count int) (int, int) {
+	for i := 0; i < count; i++ {
+		newCell, newFacing := getNextEmptyCellCube(data, width, cell, facing)
+		if newCell == cell {
+			fmt.Printf("Hit wall moveforward\n")
+			return cell, facing
+		}
+
+		cell = newCell
+		facing = newFacing
+	}
+
+	return cell, facing
+}
+
 func moveForward(data []int, width, cell, facing, count int) int {
 	for i := 0; i < count; i++ {
 		newCell := getNextEmptyCell(data, width, cell, facing)
@@ -64,6 +93,156 @@ func moveForward(data []int, width, cell, facing, count int) int {
 	}
 
 	return cell
+}
+func getNextEmptyCellCube(data []int, width, cell, facing int) (int, int) {
+	nextCell, nextFacing := getNextCellCube(data, width, cell, facing)
+	if data[nextCell] == wall {
+		fmt.Printf("Hit wall\n")
+		return cell, facing
+	}
+	return nextCell, nextFacing
+}
+func getNextCellCube(data []int, width, cell, facing int) (int, int) {
+	height := len(data) / width
+	x := cell % width
+	y := cell / width
+
+	if facing == right {
+		x++
+	} else if facing == left {
+		x--
+	} else if facing == down {
+		y++
+	} else if facing == up {
+		y--
+	}
+
+	//inBounds := x >= 0 && x < width && y >= 0 && y < height
+
+	//fmt.Printf("Got: %d, %d, %v\n", x, y, inBounds)
+
+	/*if inBounds {
+		nextCell := x + y*width
+		if data[nextCell] == wall {
+			return cell, facing
+		} else if data[nextCell] == empty {
+			return nextCell, facing
+		}
+	}*/
+
+	/*
+		    |---|---|
+			| 5 | 6 |
+			|---|---|
+			| 4 |
+		|---|---|
+		| 2 | 3 |
+		|---|---|
+		| 1 |
+		|---|
+	*/
+
+	sideLength := 50
+
+	if x == -1 && y >= 2*sideLength && y < 3*sideLength && facing == left {
+		// left from face 2 in to left side face 5
+		relativeY := y - 2*sideLength
+		x = 1 * sideLength
+		y = 50 - relativeY - 1
+		facing = right
+	} else if x == sideLength-1 && y >= 0 && y < sideLength && facing == left {
+		// left from face 5 in to left side face 2
+		x = 0
+		y = 2*sideLength + (sideLength - y) - 1
+		facing = right
+	} else if x == -1 && y >= 3*sideLength && y < 4*sideLength && facing == left {
+		// left from face 1 in to top of face 5
+		relativeY := y - 3*sideLength
+		y = 0
+		x = 1*sideLength + relativeY
+		facing = down
+	} else if y == -1 && x >= sideLength && x < 2*sideLength && facing == up {
+		// up from face 5 in to left of face 1
+		y = 3*sideLength + (x - sideLength)
+		x = 0
+		facing = right
+	} else if x >= 0 && x < sideLength && y == 4*sideLength && facing == down {
+		// down from face 1 in to top of face 6
+		x += 2 * sideLength
+		y = 0
+	} else if y == -1 && x >= 2*sideLength && x < 3*sideLength && facing == up {
+		// up from face 6 in to bottom of face 1
+		x -= 2 * sideLength
+		y = 4*sideLength - 1
+	} else if x == 2*sideLength && y >= 2*sideLength && y < 3*sideLength && facing == right {
+		// right from face 3 in to right side of face 6
+		y -= 2 * sideLength
+		y = sideLength - 1 - y
+		x = 3*sideLength - 1
+		facing = left
+	} else if x == 3*sideLength && y >= 0 && y < sideLength && facing == right {
+		// right from face 6 in to right side of face 3
+		y = sideLength - 1 - y
+		y += 2 * sideLength
+		x = 2*sideLength - 1
+		facing = left
+	} else if x >= 0 && x < sideLength && y == 2*sideLength-1 && facing == up {
+		// up from face 2 in to left side of face 4
+		y = sideLength + x
+		x = sideLength
+		facing = right
+	} else if x == sideLength-1 && y >= sideLength && y < 2*sideLength && facing == left {
+		// left from face 4 in to the top of face 2
+		x = y - sideLength
+		y = 2 * sideLength
+		facing = down
+	} else if x == sideLength && y >= 3*sideLength && y < 4*sideLength && facing == right {
+		// right from face 1 in to the bottom of face 3
+		x = 50 + (y - 3*sideLength)
+		y = 3*sideLength - 1
+		facing = up
+	} else if x >= sideLength && x < 2*sideLength && y == 3*sideLength && facing == down {
+		// down from face 3 in to right side of face 1
+		y = 3*sideLength + (x - sideLength)
+		x = sideLength - 1
+		facing = left
+	} else if x == 2*sideLength && y >= sideLength && y < 2*sideLength && facing == right {
+		// right from face 4 up in to face 6
+		x = 2*sideLength + (y - sideLength)
+		y = sideLength - 1
+		facing = up
+	} else if x >= 2*sideLength && x < 3*sideLength && y == sideLength && facing == down {
+		// down from face 6 in to the left of side 4
+		y = sideLength + (x - 2*sideLength)
+		x = 2*sideLength - 1
+		facing = left
+	}
+
+	inBounds := x >= 0 && x < width && y >= 0 && y < height
+
+	if !inBounds {
+		log.Fatalf("Out of bounds: (%d, %d), %d", x, y, facing)
+	}
+	if data[x+y*width] == invalid {
+		log.Fatalf("not on valid cell: (%d, %d)\n", x, y)
+	}
+
+	return x + y*width, facing
+}
+
+func part1(data []int, width int, instructions []int) int {
+	cell := findTopLeft(data, width)
+	facing := right
+
+	for i, instruction := range instructions {
+		if i%2 == 0 {
+			cell = moveForward(data, width, cell, facing, instruction)
+		} else {
+			facing = getNextDirection(facing, instruction)
+		}
+	}
+
+	return getPassword(cell, width, facing)
 }
 func getNextEmptyCell(data []int, width, cell, facing int) int {
 	nextCell := getNextCell(data, width, cell, facing)
@@ -104,7 +283,6 @@ func getNextCell(data []int, width, cell, facing int) int {
 		if data[newCell] != invalid {
 			return newCell
 		}
-		fmt.Printf("%d, ", newCell)
 	}
 }
 func printBoard(data []int, width int) {
@@ -136,6 +314,18 @@ func findTopLeft(data []int, width int) int {
 	}
 
 	return -1
+}
+func getOppositeDirection(direction int) int {
+	if direction == left {
+		return right
+	} else if direction == right {
+		return left
+	} else if direction == up {
+		return down
+	} else if direction == down {
+		return up
+	}
+	return 0
 }
 func getData(filename string) ([]int, int, []int) {
 	result := []int{}
@@ -183,8 +373,6 @@ func getData(filename string) ([]int, int, []int) {
 			result = append(result, invalid)
 		}
 	}
-
-	fmt.Printf("Got instructions: %s\n", instructions)
 
 	instructionsArray := []int{}
 	current := ""
